@@ -1,6 +1,9 @@
-module Network.HostAndPort where
+module Network.HostAndPort (
+    isIPv4Address,
+    isIPv6Address
+) where
 import Text.Parsec
-import Control.Applicative hiding((<|>))
+import Control.Applicative hiding((<|>), many)
 import Control.Monad
 
 type Parser = Parsec String ()
@@ -59,7 +62,7 @@ ipv6address = do
                         ++ (try <$> skippedAtBegin)
                         ++ [try $ consequence [partNum 6, last2 False]]
                         ++ [last2 False]
-    choice ipv6variants
+    choice ipv6variants <?> "IPv6 address"
   where
     h4s = (++) <$> hexShortNum <*> string ":"
     sh4 = (++) <$> string ":" <*> hexShortNum
@@ -74,8 +77,6 @@ ipv6address = do
         return $ f ++ concat e
 
     maybeNum n = concat <$> countMinMax 0 n h4s
-    s_or_h4s = string ":" <|> h4s
-    s_or_h4 = string ":" <|> hexShortNum
     last2f = try ipv4address <|> consequence [h4s, hexShortNum]
     last2 f = if f
         then last2f
@@ -91,3 +92,43 @@ ipv6address = do
         consequence [partNum 2, string "::", maybeNum 3, last2 True],
         consequence [partNum 3, string "::", maybeNum 2, last2 True],
         consequence [partNum 4, string "::", maybeNum 1, last2 True]]
+
+
+ipv6addressWithScope :: Parser String
+ipv6addressWithScope = consequence [ipv6address, option "" scope]
+  where
+    scope = consequence [string "%", many1 asciiAlphaNum]
+
+
+isParsed :: Parser a -> String -> Bool
+isParsed p s = case runParser p () "" s of
+    (Right _) -> True
+    (Left _) -> False
+
+
+ended :: (Stream s m t, Show t) => ParsecT s u m a -> ParsecT s u m a
+ended p = p >>= \v -> eof >> return v
+
+
+isIPv4Address :: String -> Bool
+isIPv4Address = isParsed $ ended ipv4address
+
+
+isIPv6Address :: String -> Bool
+isIPv6Address = isParsed $ ended ipv6addressWithScope
+
+
+isAsciiAlpha :: Char -> Bool
+isAsciiAlpha c = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
+
+
+isAsciiNum :: Char -> Bool
+isAsciiNum c = (c >= '0' && c <= '9')
+
+
+isAsciiAlphaNum :: Char -> Bool
+isAsciiAlphaNum c = isAsciiAlpha c || isAsciiNum c
+
+
+asciiAlphaNum :: Parser Char
+asciiAlphaNum = satisfy isAsciiAlphaNum

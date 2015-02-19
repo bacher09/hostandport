@@ -74,6 +74,22 @@ spec = do
         invalid isIPv6Address "::1:2:3:4:5:6:7:8"
         invalid isIPv6Address "1:2:3:4:5:6::192.168.1.10"
         invalid isIPv6Address "1:2:3:4:5:6:7:8::"
+
+    describe "defaultHostAndPort" $ do
+        it "parsing hosts" $ do
+            defaultHostAndPort "40" "localhost:25" `shouldBe` Just ("localhost", "25")
+
+        it "parsing ipv4" $ do
+            defaultHostAndPort "80" "127.0.0.1:8080" `shouldBe` Just ("127.0.0.1", "8080")
+            defaultHostAndPort "80" "127.0.0.1" `shouldBe` Just ("127.0.0.1", "80")
+
+        it "parsing ipv6" $ do
+            defaultHostAndPort "26000" "[f08e::7:8:1]" `shouldBe` Just ("f08e::7:8:1", "26000")
+            defaultHostAndPort "26000" "[f08e::7:8:1]:27000" `shouldBe` Just ("f08e::7:8:1", "27000")
+
+        it "testing invalid" $ do
+            defaultHostAndPort "60" "localhost:99999" `shouldBe` Nothing
+            defaultHostAndPort "60" "[bad]:25" `shouldBe` Nothing
   where
     valid f s = it (printf "valid \"%s\"" s) (f s `shouldBe` True)
     invalid f s = it (printf "invalid \"%s\"" s) (f s `shouldBe` False)

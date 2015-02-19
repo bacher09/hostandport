@@ -2,11 +2,13 @@ module Network.HostAndPort (
     isIPv4Address,
     isIPv6Address,
     hostAndPort,
-    maybeHostAndPort
+    maybeHostAndPort,
+    defaultHostAndPort
 ) where
 import Text.Parsec
 import Control.Applicative hiding((<|>), many)
 import Control.Monad
+import Data.Maybe
 
 
 type Parser = Parsec String ()
@@ -171,3 +173,7 @@ maybeHostAndPort :: String -> Maybe (String, Maybe String)
 maybeHostAndPort s = case hostAndPort s of
     (Right v) -> Just v
     (Left _) -> Nothing
+
+
+defaultHostAndPort :: String -> String -> Maybe (String, String)
+defaultHostAndPort p s = (\(h, mp) -> (h, fromMaybe p mp)) <$> maybeHostAndPort s

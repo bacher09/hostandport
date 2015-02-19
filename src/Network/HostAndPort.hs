@@ -58,18 +58,17 @@ port = limitedInt 65535 "Port number to large"
 
 ipv6address :: Parser String
 ipv6address = do
-    let ipv6variants = (try <$> skippedAtMiddle)
-                        ++ (try <$> skippedAtBegin)
-                        ++ [try $ consequence [partNum 6, last2 False]]
+    let ipv6variants = (try <$> skippedAtBegin)
+                        ++ [try full]
+                        ++ (try <$> skippedAtMiddle)
+                        ++ (try <$> skippedAtEnd)
                         ++ [last2 False]
-    choice ipv6variants <?> "IPv6 address"
+    choice ipv6variants <?> "bad IPv6 address"
   where
     h4s = (++) <$> hexShortNum <*> string ":"
     sh4 = (++) <$> string ":" <*> hexShortNum
     execNum 0 = return ""
-    execNum n = do
-        r <- count (n - 1) h4s
-        return $ concat r
+    execNum n = concat <$> count n h4s
     partNum 0 = return ""
     partNum n = do
         f <- hexShortNum
@@ -91,7 +90,13 @@ ipv6address = do
         consequence [partNum 1, string "::", maybeNum 4, last2 True],
         consequence [partNum 2, string "::", maybeNum 3, last2 True],
         consequence [partNum 3, string "::", maybeNum 2, last2 True],
-        consequence [partNum 4, string "::", maybeNum 1, last2 True]]
+        consequence [partNum 4, string "::", maybeNum 1, last2 True],
+        consequence [partNum 5, string "::", last2 True],
+        consequence [partNum 6, string "::", hexShortNum]]
+
+    skippedAtEnd = [consequence [partNum 7, string "::"]]
+
+    full = consequence [concat <$> count 6 h4s, last2 True]
 
 
 ipv6addressWithScope :: Parser String

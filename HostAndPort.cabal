@@ -1,16 +1,16 @@
 name:                HostAndPort
 version:             0.1.0
-synopsis:            Parser host and port pairs like localhost:22
--- description:         
 license:             MIT
 license-file:        LICENSE
 author:              Slava Bacherikov
 maintainer:          slava@bacher09.org
--- copyright:           
+homepage:            https://github.com/bacher09/hostandport
+bug-reports:         https://github.com/bacher09/hostandport/issues
+copyright:           (c) Slava Bacherikov 2015
 category:            Network
 build-type:          Simple
--- extra-source-files:  
 cabal-version:       >=1.10
+synopsis:            Parser host and port pairs like localhost:22
 
 library
   exposed-modules:     Network.HostAndPort

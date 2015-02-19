@@ -1,10 +1,13 @@
 module Network.HostAndPort (
     isIPv4Address,
-    isIPv6Address
+    isIPv6Address,
+    hostAndPort,
+    maybeHostAndPort
 ) where
 import Text.Parsec
 import Control.Applicative hiding((<|>), many)
 import Control.Monad
+
 
 type Parser = Parsec String ()
 
@@ -106,6 +109,10 @@ ipv6addressWithScope = consequence [ipv6address, option "" scope]
     scope = consequence [string "%", many1 asciiAlphaNum]
 
 
+hostname :: Parser String
+hostname = many1 $ alphaNum <|> oneOf ".-_"
+
+
 isParsed :: Parser a -> String -> Bool
 isParsed p s = case runParser p () "" s of
     (Right _) -> True
@@ -138,3 +145,29 @@ isAsciiAlphaNum c = isAsciiAlpha c || isAsciiNum c
 
 asciiAlphaNum :: Parser Char
 asciiAlphaNum = satisfy isAsciiAlphaNum
+
+
+connectionStr :: Parser (String, Maybe String)
+connectionStr = do
+    addr <- try ipv6str <|> try ipv4address <|> hostname
+    p <- maybePort
+    return (addr, p)
+  where
+    ipv6str = do
+        void $ char '['
+        ipv6 <- ipv6addressWithScope
+        void $ char ']'
+        return ipv6
+    maybePort = option Nothing $ char ':' >> Just <$> port
+
+
+hostAndPort :: String -> Either String (String, Maybe String)
+hostAndPort s = case runParser connectionStr () "" s of
+    (Right v) -> Right v
+    (Left e) -> Left $ show $ e
+
+
+maybeHostAndPort :: String -> Maybe (String, Maybe String)
+maybeHostAndPort s = case hostAndPort s of
+    (Right v) -> Just v
+    (Left _) -> Nothing

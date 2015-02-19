@@ -1,5 +1,5 @@
 name:                HostAndPort
-version:             0.1.0.0
+version:             0.1.0
 synopsis:            Parser host and port pairs like localhost:22
 -- description:         
 license:             MIT

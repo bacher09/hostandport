@@ -43,9 +43,10 @@ consequence v = liftM concat $ sequence v
 
 
 ipv4address :: Parser String
-ipv4address = concat <$> sequence
-    [byteNum, string ".", byteNum, string ".",
-     byteNum, string ".", byteNum]
+ipv4address = consequence [
+    byteNum, string ".",
+    byteNum, string ".",
+    byteNum, string ".", byteNum] <?> "bad IPv4 address"
 
 
 hexShortNum :: Parser String

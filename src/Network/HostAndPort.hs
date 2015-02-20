@@ -121,16 +121,12 @@ isParsed p s = case runParser p () "" s of
     (Left _) -> False
 
 
-ended :: (Stream s m t, Show t) => ParsecT s u m a -> ParsecT s u m a
-ended p = p >>= \v -> eof >> return v
-
-
 isIPv4Address :: String -> Bool
-isIPv4Address = isParsed $ ended ipv4address
+isIPv4Address = isParsed $ ipv4address <* eof
 
 
 isIPv6Address :: String -> Bool
-isIPv6Address = isParsed $ ended ipv6addressWithScope
+isIPv6Address = isParsed $ ipv6addressWithScope <* eof
 
 
 isAsciiAlpha :: Char -> Bool

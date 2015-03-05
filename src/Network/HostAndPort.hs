@@ -121,10 +121,13 @@ isParsed p s = case runParser p () "" s of
     (Left _) -> False
 
 
+-- | This function will validate ipv4 address
+-- and return True if string is valie adress
 isIPv4Address :: String -> Bool
 isIPv4Address = isParsed $ ipv4address <* eof
 
 
+-- | Function validates ipv6 address
 isIPv6Address :: String -> Bool
 isIPv6Address = isParsed $ ipv6addressWithScope <* eof
 
@@ -158,18 +161,49 @@ connectionStr = do
         return ipv6
     maybePort = option Nothing $ char ':' >> Just <$> port
 
-
+-- | This function will parse it's argument and return either
+-- `String` (`Left`) with info about error or (Host, `Maybe` Port)
+-- tuple (`Right`).
+--
+-- Examples:
+--
+-- >>> hostAndPort "localhost"
+-- Right ("localhost",Nothing)
+-- >>> hostAndPort "[::1]:3030"
+-- Right ("::1",Just "3030")
 hostAndPort :: String -> Either String (String, Maybe String)
 hostAndPort s = case runParser (connectionStr <* eof) () "" s of
     (Right v) -> Right v
     (Left e) -> Left $ show $ e
 
 
+-- | Function will parse argument and return Maybe (Host, Maybe Port)
+--
+-- Examples:
+--
+-- >>> maybeHostAndPort "192.168.10.12"
+-- Just ("192.168.10.12",Nothing)
+-- >>> maybeHostAndPort "192.168.10.12:7272"
+-- Just ("192.168.10.12",Just "7272")
 maybeHostAndPort :: String -> Maybe (String, Maybe String)
 maybeHostAndPort s = case hostAndPort s of
     (Right v) -> Just v
     (Left _) -> Nothing
 
 
-defaultHostAndPort :: String -> String -> Maybe (String, String)
+-- | Function will take default port and connection string
+-- and returns Just (Host, Port) for valid input and
+-- Nothing for invalid.
+--
+-- Examples:
+--
+-- >>> defaultHostAndPort "22" "my.server.com"
+-- Just ("my.server.com","22")
+-- >>> defaultHostAndPort "22" "my.otherserver.com:54022"
+-- Just ("my.otherserver.com","54022")
+-- >>> defaultHostAndPort "22" "porttobig.com:500022"
+-- Nothing
+defaultHostAndPort :: String                    -- ^ default Port number
+                   -> String                    -- ^ connection string
+                   -> Maybe (String, String)    -- ^ Maybe (Host, Port)
 defaultHostAndPort p s = (\(h, mp) -> (h, fromMaybe p mp)) <$> maybeHostAndPort s

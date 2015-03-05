@@ -160,7 +160,7 @@ connectionStr = do
 
 
 hostAndPort :: String -> Either String (String, Maybe String)
-hostAndPort s = case runParser connectionStr () "" s of
+hostAndPort s = case runParser (connectionStr <* eof) () "" s of
     (Right v) -> Right v
     (Left e) -> Left $ show $ e
 

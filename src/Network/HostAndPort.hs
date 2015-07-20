@@ -122,7 +122,7 @@ isParsed p s = case runParser p () "" s of
 
 
 -- | This function will validate ipv4 address
--- and return True if string is valie adress
+-- and return True if string is valid adress
 isIPv4Address :: String -> Bool
 isIPv4Address = isParsed $ ipv4address <* eof
 

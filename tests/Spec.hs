@@ -1,7 +1,8 @@
 module Main where
+import Data.Either (isLeft)
+import Text.Printf
 import Test.Hspec
 import Network.HostAndPort
-import Text.Printf
 
 
 main :: IO ()
@@ -90,6 +91,21 @@ spec = do
         it "testing invalid" $ do
             defaultHostAndPort "60" "localhost:99999" `shouldBe` Nothing
             defaultHostAndPort "60" "[bad]:25" `shouldBe` Nothing
+
+    describe "detailedHostAndPort" $ do
+        it "parsing hosts" $ do
+            detailedHostAndPort "localhost" `shouldBe` Right (HostName "localhost", Nothing)
+            detailedHostAndPort "some-domain.com" `shouldBe` Right (HostName "some-domain.com", Nothing)
+            detailedHostAndPort "42.another-domain.com:3030" `shouldBe` Right (HostName "42.another-domain.com", Just "3030")
+
+        it "parsing ipv6address" $ do
+            detailedHostAndPort "[::1]:8080" `shouldBe` Right (IPv6Address "::1", Just "8080")
+            detailedHostAndPort "[10::1:f]:8080" `shouldBe` Right (IPv6Address "10::1:f", Just "8080")
+            detailedHostAndPort "[::1]:65536" `shouldSatisfy` isLeft
+
+        it "parsing ipv4address" $ do
+            detailedHostAndPort "127.0.0.1" `shouldBe` Right (IPv4Address "127.0.0.1", Nothing)
+            detailedHostAndPort "127.0.0.1:6060" `shouldBe` Right (IPv4Address "127.0.0.1", Just "6060")
   where
     valid f s = it (printf "valid \"%s\"" s) (f s `shouldBe` True)
     invalid f s = it (printf "invalid \"%s\"" s) (f s `shouldBe` False)

@@ -1,8 +1,12 @@
 module Main where
-import Data.Either (isLeft)
 import Text.Printf
 import Test.Hspec
 import Network.HostAndPort
+
+
+isLeft :: Either a b -> Bool
+isLeft (Left _) = True
+isLeft (Right _) = False
 
 
 main :: IO ()

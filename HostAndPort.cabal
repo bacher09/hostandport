@@ -10,6 +10,8 @@ copyright:           (c) Slava Bacherikov 2015
 category:            Network
 build-type:          Simple
 cabal-version:       >=1.10
+tested-with:         GHC == 7.4, GHC == 7.6, GHC == 7.8, GHC == 7.10
+extra-source-files:  README.md
 synopsis:            Parser host and port pairs like localhost:22
 description:
 
@@ -32,6 +34,7 @@ description:
   * [::1]
   .
   * [::1]:8080
+
 
 library
   exposed-modules:     Network.HostAndPort

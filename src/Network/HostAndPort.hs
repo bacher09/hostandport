@@ -1,17 +1,21 @@
-module Network.HostAndPort (
-    ConnectionDetail(..),
-    RemoteAddr,
-    isIPv4Address,
-    isIPv6Address,
-    hostAndPort,
-    detailedHostAndPort,
-    maybeHostAndPort,
-    defaultHostAndPort
-) where
-import Text.Parsec
-import Control.Applicative hiding((<|>), many)
+module Network.HostAndPort
+    (
+      ConnectionDetail(..)
+    , RemoteAddr
+    , isIPv4Address
+    , isIPv6Address
+    , hostAndPort
+    , detailedHostAndPort
+    , maybeHostAndPort
+    , defaultHostAndPort
+    ) where
+
+
 import Control.Monad
 import Data.Maybe
+import Control.Applicative hiding((<|>), many)
+import Control.Arrow (second)
+import Text.Parsec
 
 
 data ConnectionDetail a = IPv4Address a
@@ -95,7 +99,7 @@ ipv6address = do
     last2f = try ipv4address <|> consequence [h4s, hexShortNum]
     last2 f = if f
         then last2f
-        else choice [try $ last2f,
+        else choice [try last2f,
                      try $ consequence [string "::", hexShortNum],
                      consequence [hexShortNum, string "::"]]
 
@@ -223,9 +227,7 @@ hostAndPort s = case runParser (connectionStr id id id <* eof) () "" s of
 -- >>> maybeHostAndPort "192.168.10.12:7272"
 -- Just ("192.168.10.12",Just "7272")
 maybeHostAndPort :: String -> Maybe (String, Maybe String)
-maybeHostAndPort s = case hostAndPort s of
-    (Right v) -> Just v
-    (Left _) -> Nothing
+maybeHostAndPort s = either (const Nothing) Just $ hostAndPort s
 
 
 -- | Function will take default port and connection string
@@ -243,4 +245,4 @@ maybeHostAndPort s = case hostAndPort s of
 defaultHostAndPort :: String                    -- ^ default Port number
                    -> String                    -- ^ connection string
                    -> Maybe (String, String)    -- ^ Maybe (Host, Port)
-defaultHostAndPort p s = (\(h, mp) -> (h, fromMaybe p mp)) <$> maybeHostAndPort s
+defaultHostAndPort p s = second (fromMaybe p) <$> maybeHostAndPort s

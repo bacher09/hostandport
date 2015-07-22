@@ -1,7 +1,10 @@
 module Network.HostAndPort (
+    ConnectionDetail(..),
+    RemoteAddr,
     isIPv4Address,
     isIPv6Address,
     hostAndPort,
+    detailedHostAndPort,
     maybeHostAndPort,
     defaultHostAndPort
 ) where
@@ -11,7 +14,14 @@ import Control.Monad
 import Data.Maybe
 
 
+data ConnectionDetail a = IPv4Address a
+                        | IPv6Address a
+                        | HostName a
+    deriving(Show, Eq, Ord)
+
+
 type Parser = Parsec String ()
+type RemoteAddr = ConnectionDetail String
 
 
 countMinMax :: (Stream s m t) => Int -> Int -> ParsecT s u m a -> ParsecT s u m [a]
@@ -148,9 +158,13 @@ asciiAlphaNum :: Parser Char
 asciiAlphaNum = satisfy isAsciiAlphaNum
 
 
-connectionStr :: Parser (String, Maybe String)
-connectionStr = do
-    addr <- try ipv6str <|> try ipv4address <|> hostname
+connectionStr :: (String -> a) ->
+                 (String -> a) ->
+                 (String -> a) -> Parser (a, Maybe String)
+connectionStr ipv6Fun ipv4Fun hostFun = do
+    addr <- try (ipv6Fun <$> ipv6str)
+                <|> try (ipv4Fun <$> ipv4address)
+                <|> (hostFun <$> hostname)
     p <- maybePort
     return (addr, p)
   where
@@ -160,6 +174,29 @@ connectionStr = do
         void $ char ']'
         return ipv6
     maybePort = option Nothing $ char ':' >> Just <$> port
+
+
+-- | This function will parse it's argument and return either
+-- `String` (`Left`) in case of error or (`ConnectionDetail String`, Maybe Port)
+-- tuple (`Right`).
+--
+-- Examples:
+--
+-- >>> detailedHostAndPort "localhost"
+-- Right (HostName "localhost",Nothing)
+-- >>> detailedHostAndPort "[::1]:3030"
+-- Right (IPv6Address "::1",Just "3030")
+-- >>> detailedHostAndPort "127.0.0.1:1080"
+-- Right (IPv4Address "127.0.0.1",Just "1080")
+--
+-- /Since/ 0.2
+detailedHostAndPort :: String -> Either String (RemoteAddr, Maybe String)
+detailedHostAndPort s = case runParser parser () "" s of
+    (Right v) -> Right v
+    (Left e) -> Left $ show e
+  where
+    parser = connectionStr IPv6Address IPv4Address HostName <* eof
+
 
 -- | This function will parse it's argument and return either
 -- `String` (`Left`) with info about error or (Host, `Maybe` Port)
@@ -172,9 +209,9 @@ connectionStr = do
 -- >>> hostAndPort "[::1]:3030"
 -- Right ("::1",Just "3030")
 hostAndPort :: String -> Either String (String, Maybe String)
-hostAndPort s = case runParser (connectionStr <* eof) () "" s of
+hostAndPort s = case runParser (connectionStr id id id <* eof) () "" s of
     (Right v) -> Right v
-    (Left e) -> Left $ show $ e
+    (Left e) -> Left $ show e
 
 
 -- | Function will parse argument and return Maybe (Host, Maybe Port)

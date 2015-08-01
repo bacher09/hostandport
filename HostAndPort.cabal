@@ -12,7 +12,7 @@ build-type:          Simple
 cabal-version:       >=1.10
 tested-with:         GHC == 7.4, GHC == 7.6, GHC == 7.8, GHC == 7.10
 extra-source-files:  README.md
-synopsis:            Parser host and port pairs like localhost:22
+synopsis:            Parser for host and port pairs like localhost:22
 description:
 
   Simple parser for parsing host and port pairs.

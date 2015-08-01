@@ -1,6 +1,5 @@
 module Network.HostAndPort
-    (
-      ConnectionDetail(..)
+    ( ConnectionDetail(..)
     , RemoteAddr
     , isIPv4Address
     , isIPv6Address

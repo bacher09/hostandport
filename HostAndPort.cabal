@@ -45,7 +45,7 @@ library
   default-language:    Haskell2010
 
 test-suite tests
-  default-language:    Haskell2010
+  default-language:    Haskell98
   type:                exitcode-stdio-1.0
   hs-source-dirs:      tests
   main-is:             Spec.hs
@@ -55,7 +55,7 @@ test-suite tests
                        hspec
 
 test-suite doctests
-  default-language:    Haskell2010
+  default-language:    Haskell98
   type:                exitcode-stdio-1.0
   hs-source-dirs:      tests
   main-is:             Doctests.hs
@@ -69,7 +69,7 @@ benchmark bench-hostandport
   hs-source-dirs:      benchmarks
   main-is:             Benchmark.hs
   ghc-options:         -O2 -Wall -fno-warn-name-shadowing
-  default-language:    Haskell2010
+  default-language:    Haskell98
   build-depends:       base >=4.5 && <5,
                        HostAndPort,
                        criterion

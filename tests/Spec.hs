@@ -69,8 +69,8 @@ spec = do
         valid isIPv6Address "::ffff:0:255.255.255.255"
         valid isIPv6Address "fe80::7:8%eth0"
         valid isIPv6Address "fe80::7:8%11"
+        valid isIPv6Address "::"
 
-        invalid isIPv6Address "::"
         invalid isIPv6Address "1:2:3:4:5:6:7:8:9"
         invalid isIPv6Address "1:2:3:4:5:6:7:"
         invalid isIPv6Address "1:2:3:4:5:6:7"

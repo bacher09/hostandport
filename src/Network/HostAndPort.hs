@@ -81,7 +81,7 @@ ipv6address = do
                         ++ [try full]
                         ++ (try <$> skippedAtMiddle)
                         ++ (try <$> skippedAtEnd)
-                        ++ [last2 False]
+                        ++ [try (last2 False), string "::"]
     choice ipv6variants <?> "bad IPv6 address"
   where
     h4s = (++) <$> hexShortNum <*> string ":"
